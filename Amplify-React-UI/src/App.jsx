@@ -10,11 +10,15 @@ function App() {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]
-    if (file && file.type.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/png']
+    const maxSize = 5 * 1024 * 1024 // 5MB
+    
+    if (file && allowedTypes.includes(file.type) && file.size <= maxSize) {
       setSelectedFile(file)
       setMessage('')
     } else {
-      setMessage('Please select a valid image file')
+      const sizeMessage = file && file.size > maxSize ? ' (file size must be less than 5MB)' : ''
+      setMessage(`Please select a valid image file (JPG or PNG only)${sizeMessage}`)
       setSelectedFile(null)
     }
   }
@@ -62,7 +66,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>Athlete Lookalike Finder</h1>
+      <h1>GameFace</h1>
 
       <div className="content-wrapper">
         <div className="upload-section">
@@ -70,7 +74,7 @@ function App() {
           <div className="file-input-wrapper">
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png"
               onChange={handleFileChange}
               id="file-input"
               className="file-input"
@@ -85,6 +89,17 @@ function App() {
             <div className="selected-file-info">
               <p>Selected: <strong>{selectedFile.name}</strong></p>
               <p>Size: {(selectedFile.size / 1024).toFixed(2)} KB</p>
+            </div>
+          )}
+
+          {selectedFile && (
+            <div className="image-preview">
+              <h3>Image Preview</h3>
+              <img 
+                src={URL.createObjectURL(selectedFile)} 
+                alt="Preview" 
+                className="preview-image" 
+              />
             </div>
           )}
 
@@ -113,15 +128,51 @@ function App() {
 
           {results.length > 0 && (
             <div className="results-list">
-              <h2>Results</h2>
-              <ul>
-                {results.map((result, index) => (
-                  <li key={result.id || index} className="result-item">
-                    <span className="result-label">{result.label || `Result ${index + 1}`}:</span>
-                    <span className="result-value">{result.value || JSON.stringify(result)}</span>
-                  </li>
-                ))}
-              </ul>
+              <h2>Match Results</h2>
+              {results.map((result, index) => (
+                <div key={result.id || index} className="match-result">
+                  <div className="photos-container">
+                    {result.userPhoto && (
+                      <div className="photo-section">
+                        <h4>Your Photo</h4>
+                        <img src={result.userPhoto} alt="Your photo" className="match-photo" />
+                      </div>
+                    )}
+                    {result.athletePhoto && (
+                      <div className="photo-section">
+                        <h4>Matched Athlete</h4>
+                        <img src={result.athletePhoto} alt="Athlete photo" className="match-photo" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="match-details">
+                    {result.playerName && (
+                      <div className="detail-row">
+                        <span className="detail-label">Player Name:</span>
+                        <span className="detail-value">{result.playerName}</span>
+                      </div>
+                    )}
+                    {result.team && (
+                      <div className="detail-row">
+                        <span className="detail-label">Team:</span>
+                        <span className="detail-value">{result.team}</span>
+                      </div>
+                    )}
+                    {result.league && (
+                      <div className="detail-row">
+                        <span className="detail-label">League:</span>
+                        <span className="detail-value">{result.league}</span>
+                      </div>
+                    )}
+                    {result.confidence !== undefined && (
+                      <div className="detail-row">
+                        <span className="detail-label">Confidence Score:</span>
+                        <span className="detail-value confidence">{(result.confidence * 100).toFixed(2)}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
