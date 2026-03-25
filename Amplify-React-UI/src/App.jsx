@@ -122,17 +122,17 @@ function App() {
         return detailRes.json()
       })
 
-      const playersInfo = await Promise.all(detailsPromises)
+      const detailsResponses = await Promise.all(detailsPromises)
 
-      const parsedResults = (searchData.matches || []).map((result, index) => {
-        const info = playersInfo[index] || {}
+      const parsedResults = (searchData.matches || []).map((match, i) => {
+        const info = detailsResponses[i] || {}
         return {
-          id: result.player_id,
-          playerName: info.name || result.player_id,
-          team: info.team_name || result.team,
-          league: info.league || result.league,
-          athletePhoto: info.image_url || null,
-          confidence: result.similarity
+          id: match.player_id,
+          playerName: info.name || match.player_id,
+          team: info.team || info.team_id || 'unknown',
+          league: info.league || info.face_collection || 'unknown',
+          athletePhoto: info.original_image_url || info.s3_url || null,
+          confidence: (match.similarity !== undefined) ? (match.similarity) : 0
         }
       })
 
@@ -244,7 +244,7 @@ function App() {
                     {result.confidence !== undefined && (
                       <div className="detail-row">
                         <span className="detail-label">Confidence Score:</span>
-                        <span className="detail-value confidence">{(result.confidence * 100).toFixed(2)}%</span>
+                        <span className="detail-value confidence">{(result.confidence).toFixed(2)}%</span>
                       </div>
                     )}
                   </div>
