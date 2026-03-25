@@ -11,7 +11,8 @@ function App() {
   // AWS API Configuration
   const API_BASE_URL = "https://chv7dtcng0.execute-api.us-east-1.amazonaws.com"
   const SEARCH_ENDPOINT = `${API_BASE_URL}/search`
-  const UPLOAD_URL = import.meta.env.VITE_IMAGE_UPLOAD_URL;
+  const UPLOAD_URL = `${API_BASE_URL}/upload`
+  const DETAIL_URL = `${API_BASE_URL}/player-details`
 
   if (!UPLOAD_URL) {
     console.warn('VITE_IMAGE_UPLOAD_URL environment variable is not set')
@@ -45,15 +46,30 @@ function App() {
     setMessage('Processing image...')
 
     try {
-      const formData = new FormData()
-      formData.append('file', selectedFile)
+      // const uploadResponse = await fetch(UPLOAD_URL, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': selectedFile.type
+      //   },
+      //   body: selectedFile
+      // })
+
+      const fileDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = () => reject(new Error('Unable to read file as data URL'))
+        reader.readAsDataURL(selectedFile)
+      })
+      const base64Image = fileDataUrl.split(',')[1] || ''
 
       const uploadResponse = await fetch(UPLOAD_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': selectedFile.type
+          'Content-Type': 'application/json'
         },
-        body: selectedFile
+        body: JSON.stringify({
+          image_base64: base64Image
+        })
       })
 
       if (!uploadResponse.ok) {
@@ -87,17 +103,38 @@ function App() {
       }
 
       const searchData = await searchResponse.json()
-      
-      // Set the uploaded image preview
+
       setUploadedImage(URL.createObjectURL(selectedFile))
-      
-      // Parse results from API response
-      // eslint-disable-next-line no-unused-vars
-      const parsedResults = (searchData.matches || []).map((result, index) => ({
-        id: result.player_id,
-        playerName: result.player_id,  // Display the ID until you fetch full details
-        confidence: result.similarity
-      }))
+
+      const playerIds = (searchData.matches || []).map(m => m.player_id)
+
+      const detailsPromises = playerIds.map(async (playerId) => {
+        const detailRes = await fetch(DETAIL_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ player_id: playerId })
+        })
+
+        if (!detailRes.ok) {
+          throw new Error(`player-details failed for ${playerId}: ${detailRes.status}`)
+        }
+
+        return detailRes.json()
+      })
+
+      const playersInfo = await Promise.all(detailsPromises)
+
+      const parsedResults = (searchData.matches || []).map((result, index) => {
+        const info = playersInfo[index] || {}
+        return {
+          id: result.player_id,
+          playerName: info.name || result.player_id,
+          team: info.team_name || result.team,
+          league: info.league || result.league,
+          athletePhoto: info.image_url || null,
+          confidence: result.similarity
+        }
+      })
 
       setResults(parsedResults)
       setMessage('Match results found!')
