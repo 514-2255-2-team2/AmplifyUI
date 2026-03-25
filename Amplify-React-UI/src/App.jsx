@@ -122,16 +122,16 @@ function App() {
         return detailRes.json()
       })
 
-      const detailsResponses = await Promise.all(detailsPromises)
+      await Promise.all(detailsPromises)
 
+      // eslint-disable-next-line no-unused-vars
       const parsedResults = (searchData.matches || []).map((match, i) => {
-        const info = detailsResponses[i] || {}
         return {
           id: match.player_id,
-          playerName: info.name || match.player_id,
-          team: info.team || info.team_id || 'unknown',
-          league: info.league || info.face_collection || 'unknown',
-          athletePhoto: info.original_image_url || info.s3_url || null,
+          playerName: match.player.name || match.player_id,
+          team: match.player.team || 'unknown',
+          league: match.player.league || 'unknown',
+          athletePhoto: match.image_url || null,
           confidence: (match.similarity !== undefined) ? (match.similarity) : 0
         }
       })
