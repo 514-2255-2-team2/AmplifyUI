@@ -9,7 +9,7 @@ function App() {
   const [message, setMessage] = useState('')
 
   // AWS API Configuration
-  const API_BASE_URL = "https://chv7dtcng0.execute-api.us-east-1.amazonaws.com"
+  const API_BASE_URL = "https://lxfk1ub828.execute-api.us-east-1.amazonaws.com/"
   const SEARCH_ENDPOINT = `${API_BASE_URL}/search`
   const UPLOAD_URL = `${API_BASE_URL}/upload`
   const DETAIL_URL = `${API_BASE_URL}/player-details`
