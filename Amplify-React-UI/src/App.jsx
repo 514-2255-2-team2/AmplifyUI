@@ -60,6 +60,9 @@ function App() {
       const uploadData = await uploadResponse.json()
       const imageSUri = uploadData.imageUri || uploadData.image_s3_uri
 
+      console.log('Upload response:', uploadData)
+      console.log('Image S3 URI:', imageSUri)
+
       setMessage('Searching for matches...')
       
       const searchPayload = {
@@ -86,13 +89,10 @@ function App() {
       setUploadedImage(URL.createObjectURL(selectedFile))
       
       // Parse results from API response
-      const parsedResults = (searchData.results || searchData.matches || []).map((result, index) => ({
-        id: index,
-        playerName: result.player_name || result.playerName,
-        team: result.team,
-        league: result.league || result.sport,
-        athletePhoto: result.athlete_photo || result.athletePhoto,
-        confidence: result.confidence || result.match_score
+      const parsedResults = (searchData.matches || []).map((result, index) => ({
+        id: result.player_id,
+        playerName: result.player_id,  // Display the ID until you fetch full details
+        confidence: result.similarity
       }))
 
       setResults(parsedResults)
