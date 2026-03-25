@@ -8,6 +8,18 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
 
+  // AWS API Configuration
+  const API_BASE_URL = "https://chv7dtcng0.execute-api.us-east-1.amazonaws.com"
+  const SEARCH_ENDPOINT = `${API_BASE_URL}/search`
+  const UPLOAD_URL = import.meta.env.VITE_IMAGE_UPLOAD_URL;
+
+  if (!UPLOAD_URL) {
+    console.warn('VITE_IMAGE_UPLOAD_URL environment variable is not set')
+  }
+
+  const TEAMS = ["Kansas City Chiefs", "Buffalo Bills"]
+  const RETURN_COUNT = 5
+
   const handleFileChange = (event) => {
     const file = event.target.files[0]
     const allowedTypes = ['image/jpeg', 'image/png']
@@ -30,35 +42,65 @@ function App() {
     }
 
     setLoading(true)
-    setMessage('Uploading image...')
+    setMessage('Processing image...')
 
     try {
-      // TODO: Replace with actual AWS API Gateway endpoint
       const formData = new FormData()
       formData.append('file', selectedFile)
 
-      // Replace with API endpoint
-      const response = await fetch('/api/upload', {
+      const uploadResponse = await fetch(UPLOAD_URL, {
         method: 'POST',
         body: formData
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        setUploadedImage(data.imageUrl || URL.createObjectURL(selectedFile))
-        setResults(data.results || [])
-        setMessage('Image submitted successfully!')
-      } else {
-        setMessage('Failed to upload image. Please try again.')
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image to S3')
       }
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      setMessage('Error uploading image.')
+
+      const uploadData = await uploadResponse.json()
+      const imageSUri = uploadData.imageUri || uploadData.image_s3_uri
+
+      setMessage('Searching for matches...')
+      
+      const searchPayload = {
+        image_s3_uri: imageSUri,
+        team_names: TEAMS,
+        return_count: RETURN_COUNT
+      }
+
+      const searchResponse = await fetch(SEARCH_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(searchPayload)
+      })
+
+      if (!searchResponse.ok) {
+        throw new Error(`API error: ${searchResponse.status}`)
+      }
+
+      const searchData = await searchResponse.json()
+      
+      // Set the uploaded image preview
       setUploadedImage(URL.createObjectURL(selectedFile))
-      setResults([
-        { id: 1, label: 'Result 1', value: 'Sample data' },
-        { id: 2, label: 'Result 2', value: 'Sample data' }
-      ])
+      
+      // Parse results from API response
+      const parsedResults = (searchData.results || searchData.matches || []).map((result, index) => ({
+        id: index,
+        playerName: result.player_name || result.playerName,
+        team: result.team,
+        league: result.league || result.sport,
+        athletePhoto: result.athlete_photo || result.athletePhoto,
+        confidence: result.confidence || result.match_score
+      }))
+
+      setResults(parsedResults)
+      setMessage('Match results found!')
+    } catch (error) {
+      console.error('Error processing image:', error)
+      setMessage(`Error: ${error.message}`)
+      setUploadedImage(URL.createObjectURL(selectedFile))
     } finally {
       setLoading(false)
     }
@@ -108,7 +150,7 @@ function App() {
             className="submit-button"
             disabled={loading || !selectedFile}
           >
-            {loading ? 'Uploading...' : 'Submit Image'}
+            {loading ? 'Processing...' : 'Submit Image'}
           </button>
 
           {message && (
@@ -132,12 +174,6 @@ function App() {
               {results.map((result, index) => (
                 <div key={result.id || index} className="match-result">
                   <div className="photos-container">
-                    {result.userPhoto && (
-                      <div className="photo-section">
-                        <h4>Your Photo</h4>
-                        <img src={result.userPhoto} alt="Your photo" className="match-photo" />
-                      </div>
-                    )}
                     {result.athletePhoto && (
                       <div className="photo-section">
                         <h4>Matched Athlete</h4>
