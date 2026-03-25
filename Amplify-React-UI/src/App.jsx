@@ -122,16 +122,17 @@ function App() {
         return detailRes.json()
       })
 
-      await Promise.all(detailsPromises)
+      const detailsResponses = await Promise.all(detailsPromises)
 
-      // eslint-disable-next-line no-unused-vars
       const parsedResults = (searchData.matches || []).map((match, i) => {
+        const playerDetails = (detailsResponses[i] && detailsResponses[i].player) || {}
+
         return {
           id: match.player_id,
-          playerName: match.player.name || match.player_id,
-          team: match.player.team || 'unknown',
-          league: match.player.league || 'unknown',
-          athletePhoto: match.image_url || null,
+          playerName: playerDetails.name || match.player_id,
+          team: playerDetails.team || 'unknown',
+          league: playerDetails.league || 'unknown',
+          athletePhoto: playerDetails.original_image_url || playerDetails.s3_url || match.image_url || null,
           confidence: (match.similarity !== undefined) ? (match.similarity) : 0
         }
       })
