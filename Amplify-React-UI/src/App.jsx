@@ -50,7 +50,10 @@ function App() {
 
       const uploadResponse = await fetch(UPLOAD_URL, {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': selectedFile.type
+        },
+        body: selectedFile
       })
 
       if (!uploadResponse.ok) {
