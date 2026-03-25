@@ -18,7 +18,7 @@ function App() {
   }
 
   const TEAMS = ["Kansas City Chiefs", "Buffalo Bills"]
-  const RETURN_COUNT = 5
+  const RETURN_COUNT = 3
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]
@@ -92,6 +92,7 @@ function App() {
       setUploadedImage(URL.createObjectURL(selectedFile))
       
       // Parse results from API response
+      // eslint-disable-next-line no-unused-vars
       const parsedResults = (searchData.matches || []).map((result, index) => ({
         id: result.player_id,
         playerName: result.player_id,  // Display the ID until you fetch full details
