@@ -9,7 +9,7 @@ function App() {
   const [message, setMessage] = useState('')
 
   // AWS API Configuration
-  const API_BASE_URL = "https://fmi04sq486.execute-api.us-east-1.amazonaws.com/"
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   const SEARCH_ENDPOINT = `${API_BASE_URL}/search`
   const UPLOAD_URL = `${API_BASE_URL}/upload`
   const DETAIL_URL = `${API_BASE_URL}/player-details`
