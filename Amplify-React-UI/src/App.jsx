@@ -84,7 +84,7 @@ function App() {
 
       console.log('selectedTeam:', selectedTeam)
       console.log('TEAMS array:', TEAMS)
-      const teamsToUse = selectedTeam === 'all' ? TEAMS : [selectedTeam]
+      const teamsToUse = selectedTeam === 'all' ? [...TEAMS] : TEAMS.filter(team => team === selectedTeam)
       console.log('teamsToUse:', teamsToUse)
 
       const searchPayload = {
