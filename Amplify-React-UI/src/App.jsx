@@ -109,9 +109,13 @@ function App() {
 
       const searchData = await searchResponse.json()
 
+      console.log('searchData from API:', searchData)
+      console.log('matches array:', searchData.matches)
+
       setUploadedImage(URL.createObjectURL(selectedFile))
 
       const playerIds = (searchData.matches || []).map(m => m.player_id)
+      console.log('playerIds extracted:', playerIds)
 
       const detailsPromises = playerIds.map(async (playerId) => {
         const detailRes = await fetch(DETAIL_URL, {
@@ -128,6 +132,7 @@ function App() {
       })
 
       const detailsResponses = await Promise.all(detailsPromises)
+      console.log('detailsResponses:', detailsResponses)
 
       const parsedResults = (searchData.matches || []).map((match, i) => {
         const playerDetails = (detailsResponses[i] && detailsResponses[i].player) || {}
