@@ -20,7 +20,7 @@ function App() {
   }
 
   const TEAMS = ["Kansas City Chiefs", "Buffalo Bills"]
-  const RETURN_COUNT = 3
+  const RETURN_COUNT = 5
 
   const handleFileChange = (event) => {
     const file = event.target.files[0]
