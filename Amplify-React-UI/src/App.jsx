@@ -7,7 +7,6 @@ function App() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [selectedTeam, setSelectedTeam] = useState('all') // NEW: Add team selection state
 
   // AWS API Configuration
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -37,11 +36,6 @@ function App() {
     }
   }
 
-  // NEW: Add team change handler
-  const handleTeamChange = (event) => {
-    setSelectedTeam(event.target.value)
-  }
-
   const handleSubmit = async () => {
     if (!selectedFile) {
       setMessage('Please select an image first')
@@ -52,6 +46,14 @@ function App() {
     setMessage('Processing image...')
 
     try {
+      // const uploadResponse = await fetch(UPLOAD_URL, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': selectedFile.type
+      //   },
+      //   body: selectedFile
+      // })
+
       const fileDataUrl = await new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onload = () => resolve(reader.result)
@@ -82,11 +84,9 @@ function App() {
 
       setMessage('Searching for matches...')
       
-      // MODIFIED: Use selected team or all teams if 'all' is selected
-      const teamsToUse = selectedTeam === 'all' ? TEAMS : [selectedTeam]
       const searchPayload = {
         image_s3_uri: imageSUri,
-        team_names: teamsToUse,
+        team_names: TEAMS,
         return_count: RETURN_COUNT
       }
 
@@ -155,26 +155,6 @@ function App() {
       <div className="content-wrapper">
         <div className="upload-section">
           <h2>Upload Image to be Matched</h2>
-          
-          {/* NEW: Add team selection dropdown */}
-          <div className="team-selector">
-            <label htmlFor="team-select">Select Team:</label>
-            <select
-              id="team-select"
-              value={selectedTeam}
-              onChange={handleTeamChange}
-              disabled={loading}
-              className="team-select"
-            >
-              <option value="all">All Teams</option>
-              {TEAMS.map((team) => (
-                <option key={team} value={team}>
-                  {team}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="file-input-wrapper">
             <input
               type="file"
