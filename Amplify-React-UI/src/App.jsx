@@ -7,7 +7,7 @@ function App() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-  const [selectedTeam, setSelectedTeam] = useState('all') // NEW: Add team selection state
+  const [selectedTeam, setSelectedTeam] = useState('all')
 
   // AWS API Configuration
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -81,14 +81,19 @@ function App() {
       console.log('Image S3 URI:', imageSUri)
 
       setMessage('Searching for matches...')
-      
-      // MODIFIED: Use selected team or all teams if 'all' is selected
+
+      console.log('selectedTeam:', selectedTeam)
+      console.log('TEAMS array:', TEAMS)
       const teamsToUse = selectedTeam === 'all' ? TEAMS : [selectedTeam]
+      console.log('teamsToUse:', teamsToUse)
+
       const searchPayload = {
         image_s3_uri: imageSUri,
         team_names: teamsToUse,
         return_count: RETURN_COUNT
       }
+
+      console.log('searchPayload:', searchPayload)
 
       const searchResponse = await fetch(SEARCH_ENDPOINT, {
         method: 'POST',
@@ -156,7 +161,6 @@ function App() {
         <div className="upload-section">
           <h2>Upload Image to be Matched</h2>
           
-          {/* NEW: Add team selection dropdown */}
           <div className="team-selector">
             <label htmlFor="team-select">Select Team:</label>
             <select
